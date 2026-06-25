@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FinCat – Controle Financeiro</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'>
+  <rect width='24' height='24' fill='black'/>
+  <path fill='white' d='M2 7v10h20V7H2zm18 8H4V9h16v6z'/>
+  <path fill='white' d='M12 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z'/>
+</svg>">
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- ============ MODAL: CONFIGURAR RENDA ============ -->
+<div id="modal-renda" class="modal-overlay active">
+  <div class="modal-box">
+    <div class="modal-cat">
+      <div class="cat-svg large" id="cat-modal"></div>
+    </div>
+    <h2>Olá! Sou o <span class="accent">FinCat</span> 🐾</h2>
+    <p class="modal-sub">Antes de começar, me conta quanto você recebeu este mês e como quer distribuir.</p>
+
+    <div class="form-group">
+      <label>💰 Renda do mês (R$)</label>
+      <input type="number" id="input-renda" placeholder="Ex: 3000" min="0" />
+    </div>
+
+    <div id="categorias-setup">
+      <div class="cat-header">
+        <span>📊 Distribuição de renda</span>
+        <button class="btn-small" id="btn-add-cat">+ Adicionar</button>
+      </div>
+      <div id="lista-categorias"></div>
+      <div class="perc-total">
+        Total: <span id="perc-total-span">0</span>% <span id="perc-aviso"></span>
+      </div>
+    </div>
+
+    <button class="btn-primary" id="btn-confirmar-setup">Começar a controlar 🐾</button>
+  </div>
+</div>
+
+<!-- ============ APP PRINCIPAL ============ -->
+<div id="app" class="hidden">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo-area">
+      <div class="cat-svg" id="cat-logo"></div>
+      <span class="logo-text">Fin<span class="accent">Cat</span></span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <button class="nav-btn active" data-view="dashboard">🏠 Dashboard</button>
+      <button class="nav-btn" data-view="lancamentos">📝 Lançamentos</button>
+      <button class="nav-btn" data-view="config">⚙️ Configurações</button>
+    </nav>
+
+    <!-- CAT STATUS CARD -->
+    <div class="cat-status-card">
+      <div class="cat-svg medium" id="cat-sidebar"></div>
+      <div class="cat-speech" id="cat-fala">
+        Tudo sob controle por enquanto! 😸
+      </div>
+    </div>
+
+    <div class="sidebar-month">
+      <span id="mes-label">Carregando...</span>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+
+    <!-- VIEW: DASHBOARD -->
+    <div id="view-dashboard" class="view active">
+      <header class="page-header">
+        <div>
+          <h1>Dashboard</h1>
+          <p id="resumo-header">Acompanhe suas finanças do mês</p>
+        </div>
+        <div class="renda-badge">
+          <span class="badge-label">Renda do mês</span>
+          <span class="badge-valor" id="badge-renda">R$ 0,00</span>
+        </div>
+      </header>
+
+      <!-- CARDS DE CATEGORIAS -->
+      <section class="cards-grid" id="cards-categorias"></section>
+
+      <!-- GRÁFICO + TABELA -->
+      <div class="bottom-grid">
+        <div class="chart-panel">
+          <div class="panel-header">
+            <h3>Distribuição de gastos</h3>
+            <div class="chart-toggle">
+              <button class="toggle-btn active" id="btn-real" onclick="toggleGrafico('real')">Real</button>
+              <button class="toggle-btn" id="btn-ideal" onclick="toggleGrafico('ideal')">Ideal</button>
+            </div>
+          </div>
+          <canvas id="grafico-pizza" width="300" height="300"></canvas>
+          <div class="chart-legend" id="chart-legend"></div>
+        </div>
+
+        <div class="gastos-panel">
+          <div class="panel-header">
+            <h3>Últimos lançamentos</h3>
+            <button class="btn-small" onclick="showView('lancamentos')">Ver todos</button>
+          </div>
+          <div id="ultimos-gastos" class="gastos-mini-lista"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW: LANÇAMENTOS -->
+    <div id="view-lancamentos" class="view">
+      <header class="page-header">
+        <h1>Lançamentos</h1>
+      </header>
+
+      <div class="lancamentos-grid">
+        <!-- FORM NOVO GASTO -->
+        <div class="form-panel">
+          <h3>Registrar gasto</h3>
+          <div class="form-group">
+            <label>Descrição</label>
+            <input type="text" id="gasto-desc" placeholder="Ex: Mercado, Netflix..." />
+          </div>
+          <div class="form-group">
+            <label>Valor (R$)</label>
+            <input type="number" id="gasto-valor" placeholder="0,00" min="0" step="0.01" />
+          </div>
+          <div class="form-group">
+            <label>Categoria</label>
+            <select id="gasto-cat"></select>
+          </div>
+          <div class="form-group">
+            <label>Data</label>
+            <input type="date" id="gasto-data" />
+          </div>
+          <button class="btn-primary" onclick="adicionarGasto()">Registrar gasto 💸</button>
+
+          <!-- CHAT COM GATO -->
+          <div class="chat-section">
+            <h4>💬 Consultar o FinCat</h4>
+            <p class="chat-hint">Pergunte se uma compra é viável!</p>
+            <input type="text" id="chat-input" placeholder="Ex: Posso comprar um tênis de R$300?" />
+            <button class="btn-secondary" onclick="consultarGato()">Perguntar 🐾</button>
+            <div id="chat-resposta" class="chat-resposta hidden"></div>
+          </div>
+        </div>
+
+        <!-- TABELA DE GASTOS -->
+        <div class="table-panel">
+          <div class="panel-header">
+            <h3>Todos os gastos</h3>
+            <button class="btn-small btn-danger" onclick="limparGastos()">🗑 Limpar</button>
+          </div>
+          <table class="gastos-table">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Descrição</th>
+                <th>Categoria</th>
+                <th>Valor</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tabela-gastos"></tbody>
+          </table>
+          <div id="tabela-vazia" class="table-empty">Nenhum gasto registrado ainda 😺</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW: CONFIGURAÇÕES -->
+    <div id="view-config" class="view">
+      <header class="page-header">
+        <h1>Configurações</h1>
+      </header>
+      <div class="config-grid">
+        <div class="form-panel">
+          <h3>Renda do mês</h3>
+          <div class="form-group">
+            <label>Valor (R$)</label>
+            <input type="number" id="config-renda" placeholder="0" />
+          </div>
+          <button class="btn-primary" onclick="salvarRenda()">Salvar renda</button>
+        </div>
+        <div class="form-panel">
+          <h3>Categorias e distribuição</h3>
+          <div id="config-cats"></div>
+          <button class="btn-small" id="btn-add-cat-config">+ Adicionar categoria</button>
+          <div class="perc-total">Total: <span id="perc-total-config">0</span>% <span id="perc-aviso-config"></span></div>
+          <button class="btn-primary" style="margin-top:16px" onclick="salvarConfig()">Salvar configurações</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/chat.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
