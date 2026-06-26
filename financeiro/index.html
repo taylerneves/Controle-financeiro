@@ -1,112 +1,114 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="dark">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>FinCat – Controle Financeiro</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,
-<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'>
-  <rect width='24' height='24' fill='black'/>
-  <path fill='white' d='M2 7v10h20V7H2zm18 8H4V9h16v6z'/>
-  <path fill='white' d='M12 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z'/>
-</svg>">
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" type="image/png" href="assets/ok.png"/>
+  <link rel="stylesheet" href="css/style.css"/>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
-<!-- ============ MODAL: CONFIGURAR RENDA ============ -->
-<div id="modal-renda" class="modal-overlay active">
+<!-- ===== MODAL SETUP ===== -->
+<div id="modal-renda" class="modal-overlay">
   <div class="modal-box">
-    <div class="modal-cat">
-      <div class="cat-svg large" id="cat-modal"></div>
+    <div class="modal-cat-wrap">
+      <div class="fincat-logo modal-logo-cat"></div>
     </div>
     <h2>Olá! Sou o <span class="accent">FinCat</span> 🐾</h2>
-    <p class="modal-sub">Antes de começar, me conta quanto você recebeu este mês e como quer distribuir.</p>
-
+    <p class="modal-sub">Me conta quanto você recebeu este mês e como quer distribuir sua renda.</p>
     <div class="form-group">
       <label>💰 Renda do mês (R$)</label>
-      <input type="number" id="input-renda" placeholder="Ex: 3000" min="0" />
+      <input type="number" id="input-renda" placeholder="Ex: 3000" min="0"/>
     </div>
-
     <div id="categorias-setup">
       <div class="cat-header">
         <span>📊 Distribuição de renda</span>
         <button class="btn-small" id="btn-add-cat">+ Adicionar</button>
       </div>
       <div id="lista-categorias"></div>
-      <div class="perc-total">
-        Total: <span id="perc-total-span">0</span>% <span id="perc-aviso"></span>
-      </div>
+      <div class="perc-total">Total: <span id="perc-total-span">0</span>% <span id="perc-aviso"></span></div>
     </div>
-
     <button class="btn-primary" id="btn-confirmar-setup">Começar a controlar 🐾</button>
   </div>
 </div>
 
-<!-- ============ APP PRINCIPAL ============ -->
+<!-- ===== MODAL FECHAMENTO ===== -->
+<div id="modal-fechamento" class="modal-overlay hidden">
+  <div class="modal-box modal-fechamento-box">
+    <div class="fechamento-cat">
+      <div class="fincat-mood fechamento-mood-cat"></div>
+    </div>
+    <div class="fechamento-badge" id="fechamento-badge"></div>
+    <h2 id="fechamento-titulo">Resumo do Mês</h2>
+    <p id="fechamento-subtitulo" class="modal-sub"></p>
+    <div id="fechamento-stats" class="fechamento-stats"></div>
+    <div id="fechamento-cats" class="fechamento-cats"></div>
+    <div class="fechamento-actions">
+      <button class="btn-secondary" id="btn-fechar-sem-salvar">Continuar no mês atual</button>
+      <button class="btn-primary" id="btn-fechar-mes">Encerrar mês e avançar 🐾</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
 <div id="app" class="hidden">
 
-  <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="logo-area">
-      <div class="cat-svg" id="cat-logo"></div>
+      <div class="fincat-logo sidebar-logo"></div>
       <span class="logo-text">Fin<span class="accent">Cat</span></span>
     </div>
 
     <nav class="sidebar-nav">
       <button class="nav-btn active" data-view="dashboard">🏠 Dashboard</button>
       <button class="nav-btn" data-view="lancamentos">📝 Lançamentos</button>
+      <button class="nav-btn" data-view="historico">📅 Histórico</button>
+      <button class="nav-btn" data-view="fixos">📌 Fixos & Parcelas</button>
       <button class="nav-btn" data-view="config">⚙️ Configurações</button>
     </nav>
 
-    <!-- CAT STATUS CARD -->
     <div class="cat-status-card">
-      <div class="cat-svg medium" id="cat-sidebar"></div>
-      <div class="cat-speech" id="cat-fala">
-        Tudo sob controle por enquanto! 😸
-      </div>
+      <div class="fincat-mood cat-mood-sidebar"></div>
+      <div class="cat-speech" id="cat-fala">Carregando...</div>
     </div>
 
-    <div class="sidebar-month">
-      <span id="mes-label">Carregando...</span>
+    <div class="sidebar-footer">
+      <button class="btn-theme" id="btn-tema" title="Alternar tema">🌙</button>
+      <span class="sidebar-month" id="mes-label"></span>
+      <button class="btn-small btn-fechar-mes-nav" onclick="abrirModalFechamento()">Fechar mês →</button>
     </div>
   </aside>
 
-  <!-- MAIN CONTENT -->
   <main class="main-content">
 
-    <!-- VIEW: DASHBOARD -->
+    <!-- DASHBOARD -->
     <div id="view-dashboard" class="view active">
       <header class="page-header">
         <div>
           <h1>Dashboard</h1>
-          <p id="resumo-header">Acompanhe suas finanças do mês</p>
+          <p id="resumo-header">Acompanhe suas finanças</p>
         </div>
         <div class="renda-badge">
           <span class="badge-label">Renda do mês</span>
           <span class="badge-valor" id="badge-renda">R$ 0,00</span>
         </div>
       </header>
-
-      <!-- CARDS DE CATEGORIAS -->
       <section class="cards-grid" id="cards-categorias"></section>
-
-      <!-- GRÁFICO + TABELA -->
       <div class="bottom-grid">
         <div class="chart-panel">
           <div class="panel-header">
-            <h3>Distribuição de gastos</h3>
+            <h3>Distribuição</h3>
             <div class="chart-toggle">
               <button class="toggle-btn active" id="btn-real" onclick="toggleGrafico('real')">Real</button>
               <button class="toggle-btn" id="btn-ideal" onclick="toggleGrafico('ideal')">Ideal</button>
             </div>
           </div>
-          <canvas id="grafico-pizza" width="300" height="300"></canvas>
+          <canvas id="grafico-pizza" width="280" height="280"></canvas>
           <div class="chart-legend" id="chart-legend"></div>
         </div>
-
         <div class="gastos-panel">
           <div class="panel-header">
             <h3>Últimos lançamentos</h3>
@@ -117,23 +119,19 @@
       </div>
     </div>
 
-    <!-- VIEW: LANÇAMENTOS -->
+    <!-- LANÇAMENTOS -->
     <div id="view-lancamentos" class="view">
-      <header class="page-header">
-        <h1>Lançamentos</h1>
-      </header>
-
+      <header class="page-header"><h1>Lançamentos</h1></header>
       <div class="lancamentos-grid">
-        <!-- FORM NOVO GASTO -->
         <div class="form-panel">
           <h3>Registrar gasto</h3>
           <div class="form-group">
             <label>Descrição</label>
-            <input type="text" id="gasto-desc" placeholder="Ex: Mercado, Netflix..." />
+            <input type="text" id="gasto-desc" placeholder="Ex: Mercado, Netflix..."/>
           </div>
           <div class="form-group">
             <label>Valor (R$)</label>
-            <input type="number" id="gasto-valor" placeholder="0,00" min="0" step="0.01" />
+            <input type="number" id="gasto-valor" placeholder="0,00" min="0" step="0.01"/>
           </div>
           <div class="form-group">
             <label>Categoria</label>
@@ -141,36 +139,46 @@
           </div>
           <div class="form-group">
             <label>Data</label>
-            <input type="date" id="gasto-data" />
+            <input type="date" id="gasto-data"/>
           </div>
-          <button class="btn-primary" onclick="adicionarGasto()">Registrar gasto 💸</button>
+          <button class="btn-primary" onclick="adicionarGasto()">Registrar 💸</button>
 
-          <!-- CHAT COM GATO -->
           <div class="chat-section">
-            <h4>💬 Consultar o FinCat</h4>
-            <p class="chat-hint">Pergunte se uma compra é viável!</p>
-            <input type="text" id="chat-input" placeholder="Ex: Posso comprar um tênis de R$300?" />
-            <button class="btn-secondary" onclick="consultarGato()">Perguntar 🐾</button>
+            <div class="chat-header-row">
+              <div class="fincat-mood chat-cat-mini"></div>
+              <div>
+                <h4>💬 Consultar o FinCat</h4>
+                <p class="chat-hint">Quer saber se pode comprar algo?</p>
+              </div>
+            </div>
+            <div class="chat-fields">
+              <div class="form-group">
+                <label>📦 O que quer comprar?</label>
+                <input type="text" id="chat-item" placeholder="Ex: Tênis Nike, Notebook..."/>
+              </div>
+              <div class="form-group">
+                <label>💰 Quanto custa? (R$)</label>
+                <input type="number" id="chat-preco" placeholder="0,00" min="0" step="0.01"/>
+              </div>
+              <div class="form-group">
+                <label>🎯 Para que serve / por quê?</label>
+                <input type="text" id="chat-motivo" placeholder="Ex: Trabalho, lazer, necessidade..."/>
+              </div>
+            </div>
+            <button class="btn-chat" onclick="consultarGato()">
+              <span id="chat-btn-text">Perguntar ao FinCat 🐾</span>
+            </button>
             <div id="chat-resposta" class="chat-resposta hidden"></div>
           </div>
         </div>
 
-        <!-- TABELA DE GASTOS -->
         <div class="table-panel">
           <div class="panel-header">
             <h3>Todos os gastos</h3>
             <button class="btn-small btn-danger" onclick="limparGastos()">🗑 Limpar</button>
           </div>
           <table class="gastos-table">
-            <thead>
-              <tr>
-                <th>Data</th>
-                <th>Descrição</th>
-                <th>Categoria</th>
-                <th>Valor</th>
-                <th></th>
-              </tr>
-            </thead>
+            <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Tipo</th><th>Valor</th><th></th></tr></thead>
             <tbody id="tabela-gastos"></tbody>
           </table>
           <div id="tabela-vazia" class="table-empty">Nenhum gasto registrado ainda 😺</div>
@@ -178,17 +186,59 @@
       </div>
     </div>
 
-    <!-- VIEW: CONFIGURAÇÕES -->
+    <!-- HISTÓRICO -->
+    <div id="view-historico" class="view">
+      <header class="page-header"><h1>Histórico de Meses</h1></header>
+      <div id="historico-container" class="historico-container"></div>
+    </div>
+
+    <!-- FIXOS -->
+    <div id="view-fixos" class="view">
+      <header class="page-header"><h1>Fixos & Parcelamentos</h1></header>
+      <div class="fixos-grid">
+        <div class="form-panel">
+          <h3>Adicionar recorrente</h3>
+          <div class="form-group">
+            <label>Descrição</label>
+            <input type="text" id="fixo-desc" placeholder="Ex: Netflix, Aluguel..."/>
+          </div>
+          <div class="form-group">
+            <label>Valor (R$)</label>
+            <input type="number" id="fixo-valor" placeholder="0,00" min="0" step="0.01"/>
+          </div>
+          <div class="form-group">
+            <label>Categoria</label>
+            <select id="fixo-cat"></select>
+          </div>
+          <div class="form-group">
+            <label>Tipo</label>
+            <select id="fixo-tipo">
+              <option value="fixo">🔁 Gasto Fixo (todo mês)</option>
+              <option value="parcela">📦 Parcelado</option>
+            </select>
+          </div>
+          <div id="parcelas-grupo" class="form-group hidden">
+            <label>Nº de parcelas restantes</label>
+            <input type="number" id="fixo-parcelas" placeholder="Ex: 12" min="1" max="120"/>
+          </div>
+          <button class="btn-primary" onclick="adicionarFixo()">Adicionar 📌</button>
+        </div>
+        <div class="table-panel">
+          <div class="panel-header"><h3>Recorrentes cadastrados</h3></div>
+          <div id="lista-fixos"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONFIG -->
     <div id="view-config" class="view">
-      <header class="page-header">
-        <h1>Configurações</h1>
-      </header>
+      <header class="page-header"><h1>Configurações</h1></header>
       <div class="config-grid">
         <div class="form-panel">
           <h3>Renda do mês</h3>
           <div class="form-group">
             <label>Valor (R$)</label>
-            <input type="number" id="config-renda" placeholder="0" />
+            <input type="number" id="config-renda" placeholder="0"/>
           </div>
           <button class="btn-primary" onclick="salvarRenda()">Salvar renda</button>
         </div>
@@ -205,6 +255,7 @@
   </main>
 </div>
 
+<script src="assets/cats.js"></script>
 <script src="js/data.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/chat.js"></script>
